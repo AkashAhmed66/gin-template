@@ -12,6 +12,7 @@ app.exe
 #swagger doc
 docs/
 
+
 # Test / coverage
 *.test
 *.out
