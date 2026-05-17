@@ -21,7 +21,8 @@ This is the Gin port of [spring-boot-template](../spring-boot-template) — same
 7. [Configuration Reference](#configuration-reference)
 8. [Built-in Endpoints](#built-in-endpoints)
 9. [Database Migrations](#database-migrations)
-10. [Build, Test, Run](#build-test-run)
+10. [Docker](#docker)
+11. [Build, Test, Run](#build-test-run)
 
 ---
 
@@ -991,6 +992,111 @@ goose -dir migrations create add_orders sql
 goose -dir migrations postgres "postgres://user:pass@localhost/db?sslmode=disable" up
 goose -dir migrations postgres "postgres://user:pass@localhost/db?sslmode=disable" down
 ```
+
+---
+
+## Docker
+
+The repo ships with a multi-stage [Dockerfile](Dockerfile) and a [docker-compose.yml](docker-compose.yml) that runs the full stack — Postgres, Redis, the app, and Asynqmon — with one command.
+
+### Boot the whole stack
+
+```bash
+docker compose up -d --build
+```
+
+What you get:
+
+| Service | URL | Credentials |
+|---|---|---|
+| **App** | http://localhost:8080 | admin / admin123 |
+| **Swagger UI** | http://localhost:8080/swagger/index.html | — |
+| **Asynqmon** (queue UI) | http://localhost:8081 | — |
+| **Postgres** | `localhost:5432` | postgres / postgres |
+| **Redis** | `localhost:6379` | — |
+
+Wait ~30 s on the first run while Postgres warms up. Tail logs while it boots:
+
+```bash
+docker compose logs -f app
+```
+
+Healthcheck status — once everything's `healthy` you're ready to hit the API:
+
+```bash
+docker compose ps
+```
+
+### Common workflows
+
+```bash
+# Rebuild after code changes
+docker compose up -d --build app
+
+# Stop everything (volumes preserved)
+docker compose down
+
+# Wipe everything including DB + uploads + logs
+docker compose down -v
+
+# Open a shell inside the app container
+docker compose exec app sh
+
+# Run an ad-hoc migration command against the running Postgres
+docker compose exec postgres psql -U postgres -d gin_template
+```
+
+### What's in the image
+
+- Multi-stage build: `golang:1.24-alpine` builder, `alpine:3.19` runtime.
+- Static binary (`CGO_ENABLED=0`), stripped (`-ldflags="-s -w"`), trimpath'd.
+- `swag init` runs **during the build** — no need to commit `docs/`.
+- Runs as **non-root** user `app`.
+- Final image: ~25 MB.
+- Includes `migrations/`, `templates/`, `docs/` baked in.
+- `uploads/` and `logs/` are volume mounts so data survives `docker compose down`.
+
+### Files used by Docker
+
+| File | Purpose |
+|---|---|
+| [Dockerfile](Dockerfile) | Multi-stage build definition |
+| [.dockerignore](.dockerignore) | Excludes `.git`, `.env`, `logs/`, `uploads/`, etc. from the build context |
+| [docker-compose.yml](docker-compose.yml) | Full local stack (app + postgres + redis + asynqmon) |
+
+### Environment overrides
+
+Compose hardcodes container-friendly env values (DB host = `postgres`, Redis host = `redis`, etc.). To override any of them — including the JWT secret for production — export them in your shell before `docker compose up` or use a compose-aware secrets store:
+
+```bash
+export JWT_SECRET="$(openssl rand -base64 32)"
+export DB_PASSWORD="$(openssl rand -base64 24)"
+docker compose up -d --build
+```
+
+### Production checklist (before you push to a real server)
+
+1. **Override `JWT_SECRET`** — the compose default is a placeholder.
+2. **Set `APP_ENV=prod`** — switches Gin to release mode and rejects weak JWT secrets.
+3. **Use external Postgres + Redis** — the bundled containers are for local dev. In prod, point `DB_HOST` / `REDIS_ADDR` at managed instances.
+4. **Mount real volumes** (or use object storage) for `/app/uploads` so files survive container replacement.
+5. **Lock down Asynqmon** — it has no auth. Don't expose port 8081 publicly; tunnel over SSH or put it behind an authenticated reverse proxy.
+6. **Override `MAIL_*`** — enable + configure SMTP for password-reset emails.
+7. **Bump pool sizes** for the workload — `DB_POOL_MAX_OPEN`, `QUEUE_CONCURRENCY`, `JOBS_WORKER_POOL_SIZE`.
+
+### Just the app (no compose)
+
+```bash
+docker build -t gin-template:latest .
+
+docker run --rm -p 8080:8080 \
+  -e DB_HOST=host.docker.internal \
+  -e REDIS_ADDR=host.docker.internal:6379 \
+  -e JWT_SECRET="$(openssl rand -base64 32)" \
+  gin-template:latest
+```
+
+(`host.docker.internal` reaches services running on your host from inside the container — works on Docker Desktop. On Linux pass `--add-host=host.docker.internal:host-gateway`.)
 
 ---
 

@@ -1,4 +1,28 @@
 services:
+  # ---------------------------------------------------------------------------
+  # Postgres — primary datastore
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: gin-template-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gin_template
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gin_template"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Redis — backing store for the asynq task queue
+  # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: gin-template-redis
@@ -13,6 +37,87 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ---------------------------------------------------------------------------
+  # The app itself — built from ./Dockerfile
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gin-template:latest
+    container_name: gin-template-app
+    ports:
+      - "8080:8080"
+    environment:
+      # --- App ---
+      APP_NAME: gin-template
+      APP_ENV: dev
+      SERVER_PORT: "8080"
+
+      # --- Database (talks to the `postgres` service) ---
+      DB_DRIVER: postgres
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: gin_template
+      DB_SSLMODE: disable
+
+      # --- Migrations ---
+      MIGRATIONS_DIR: migrations
+      MIGRATIONS_AUTO_RUN: "true"
+
+      # --- JWT — override for production deployments ---
+      JWT_SECRET: dev-only-secret-override-in-production
+      JWT_ISSUER: gin-template
+
+      # --- Logging — JSON in containers so log aggregators can parse ---
+      LOG_LEVEL: info
+      LOG_FORMAT: json
+      LOG_DIR: /app/logs
+      LOG_FILE: app.log
+      LOG_MAX_SIZE_MB: "100"
+      LOG_MAX_BACKUPS: "7"
+      LOG_MAX_AGE_DAYS: "2"
+      LOG_COMPRESS: "true"
+
+      # --- File uploads ---
+      STORAGE_BASE_PATH: /app/uploads
+
+      # --- Background jobs (in-process) ---
+      JOBS_ENABLED: "true"
+      JOBS_TIMEZONE: UTC
+
+      # --- Persistent task queue (Redis-backed) ---
+      QUEUE_ENABLED: "true"
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: "0"
+      QUEUE_CONCURRENCY: "10"
+      QUEUE_PRIORITIES: "critical=6,default=3,low=1"
+
+      # --- Mail — off by default; flip and configure to enable ---
+      MAIL_ENABLED: "false"
+      MAIL_APP_URL: http://localhost:8080
+    volumes:
+      - app-uploads:/app/uploads
+      - app-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Asynqmon — web UI for the task queue
+  # ---------------------------------------------------------------------------
   asynqmon:
     image: hibiken/asynqmon:latest
     container_name: gin-template-asynqmon
@@ -26,4 +131,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres-data:
   redis-data:
+  app-uploads:
+  app-logs:
