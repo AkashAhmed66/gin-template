@@ -3,9 +3,9 @@
 // Boot order: env → logger → DB connect → migrations → bootstrap admin → router → HTTP server.
 // Graceful shutdown on SIGINT/SIGTERM cancels in-flight requests within SERVER_SHUTDOWN_TIMEOUT.
 //
-// Paths below are relative to this file's directory (cmd/api/), which is the
-// working directory when `go generate ./...` fires the directive.
-//go:generate swag init -d ../../ -g cmd/api/main.go -o ../../docs --parseDependency --parseInternal
+// Bare `swag init` from the repo root regenerates the Swagger spec — main.go
+// is here, the docs/ output directory is here, no flags needed.
+//go:generate swag init --parseDependency --parseInternal
 package main
 
 import (
@@ -15,7 +15,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/AkashAhmed66/gin-template/internal/bootstrap"
 	"github.com/AkashAhmed66/gin-template/internal/config"
@@ -26,8 +25,8 @@ import (
 
 	// Blank-import the generated Swagger docs so init() registers the spec
 	// with the swag runtime. The placeholder docs.go does nothing; once you
-	// run `swag init -g cmd/api/main.go -o docs`, the generated file's init()
-	// makes the spec available at /swagger/doc.json.
+	// run `swag init`, the generated file's init() makes the spec available
+	// at /swagger/doc.json.
 	_ "github.com/AkashAhmed66/gin-template/docs"
 )
 
@@ -115,5 +114,4 @@ func main() {
 	// Drain any tail-end async work (audit, mail, idempotency cleanup).
 	deps.Wait(ctx)
 	log.Info("shutdown complete")
-	_ = time.Now()
 }

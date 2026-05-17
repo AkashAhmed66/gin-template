@@ -6,7 +6,7 @@ APP_NAME ?= gin-template
 PKG      := ./...
 BIN_DIR  := bin
 BINARY   := $(BIN_DIR)/$(APP_NAME)
-MAIN_PKG := ./cmd/api
+MAIN_PKG := .
 
 GO       := go
 
@@ -44,8 +44,11 @@ fmt: ## Format code
 vet: ## Run go vet
 	$(GO) vet $(PKG)
 
-swag: ## Regenerate Swagger docs from annotations
-	swag init -g cmd/api/main.go -o docs
+swag: ## Regenerate Swagger docs from annotations (output: docs/)
+	swag init --parseDependency --parseInternal
+
+swag-install: ## Install the swag CLI (writes to $GOPATH/bin)
+	go install github.com/swaggo/swag/cmd/swag@latest
 
 migrate-up: ## Apply all up migrations
 	goose -dir migrations $(DB_DRIVER) "$(DB_DSN)" up

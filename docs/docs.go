@@ -68,13 +68,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_session_Response"
+                                            "$ref": "#/definitions/dto.PageResponse-session_Response"
                                         }
                                     }
                                 }
@@ -113,13 +113,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_session.Response"
+                                            "$ref": "#/definitions/session.Response"
                                         }
                                     }
                                 }
@@ -129,7 +129,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -160,13 +160,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -273,13 +273,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_audit_Log"
+                                            "$ref": "#/definitions/dto.PageResponse-audit_Log"
                                         }
                                     }
                                 }
@@ -289,7 +289,7 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -315,7 +315,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.ForgotPasswordRequest"
+                            "$ref": "#/definitions/auth.ForgotPasswordRequest"
                         }
                     }
                 ],
@@ -323,7 +323,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -359,13 +359,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -375,25 +375,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -419,7 +419,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.LoginRequest"
+                            "$ref": "#/definitions/auth.LoginRequest"
                         }
                     }
                 ],
@@ -429,13 +429,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -445,13 +445,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -476,13 +476,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -507,13 +507,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -539,7 +539,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.RefreshRequest"
+                            "$ref": "#/definitions/auth.RefreshRequest"
                         }
                     }
                 ],
@@ -549,13 +549,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -565,7 +565,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -591,7 +591,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.RegisterRequest"
+                            "$ref": "#/definitions/auth.RegisterRequest"
                         }
                     }
                 ],
@@ -601,13 +601,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -617,13 +617,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -649,7 +649,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.ResetPasswordRequest"
+                            "$ref": "#/definitions/auth.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -657,13 +657,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -688,13 +688,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -727,19 +727,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -784,13 +784,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_file.Response"
+                                            "$ref": "#/definitions/file.Response"
                                         }
                                     }
                                 }
@@ -800,13 +800,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -841,7 +841,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -887,13 +887,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_permission_Response"
+                                            "$ref": "#/definitions/dto.PageResponse-permission_Response"
                                         }
                                     }
                                 }
@@ -925,7 +925,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_permission.Request"
+                            "$ref": "#/definitions/permission.Request"
                         }
                     }
                 ],
@@ -935,13 +935,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_permission.Response"
+                                            "$ref": "#/definitions/permission.Response"
                                         }
                                     }
                                 }
@@ -951,13 +951,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -992,13 +992,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_permission.Response"
+                                            "$ref": "#/definitions/permission.Response"
                                         }
                                     }
                                 }
@@ -1008,7 +1008,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1043,7 +1043,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_permission.Request"
+                            "$ref": "#/definitions/permission.Request"
                         }
                     }
                 ],
@@ -1053,13 +1053,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_permission.Response"
+                                            "$ref": "#/definitions/permission.Response"
                                         }
                                     }
                                 }
@@ -1069,13 +1069,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1106,13 +1106,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1177,13 +1177,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_product_Response"
+                                            "$ref": "#/definitions/dto.PageResponse-product_Response"
                                         }
                                     }
                                 }
@@ -1215,7 +1215,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_product.Request"
+                            "$ref": "#/definitions/product.Request"
                         }
                     }
                 ],
@@ -1225,13 +1225,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_product.Response"
+                                            "$ref": "#/definitions/product.Response"
                                         }
                                     }
                                 }
@@ -1241,13 +1241,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1282,13 +1282,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_product.Response"
+                                            "$ref": "#/definitions/product.Response"
                                         }
                                     }
                                 }
@@ -1298,7 +1298,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1333,7 +1333,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_product.Request"
+                            "$ref": "#/definitions/product.Request"
                         }
                     }
                 ],
@@ -1343,13 +1343,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_product.Response"
+                                            "$ref": "#/definitions/product.Response"
                                         }
                                     }
                                 }
@@ -1359,19 +1359,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1402,13 +1402,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1454,13 +1454,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_product.Response"
+                                            "$ref": "#/definitions/product.Response"
                                         }
                                     }
                                 }
@@ -1470,13 +1470,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1522,13 +1522,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_role_Response"
+                                            "$ref": "#/definitions/dto.PageResponse-role_Response"
                                         }
                                     }
                                 }
@@ -1560,7 +1560,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_role.Request"
+                            "$ref": "#/definitions/role.Request"
                         }
                     }
                 ],
@@ -1570,13 +1570,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_role.Response"
+                                            "$ref": "#/definitions/role.Response"
                                         }
                                     }
                                 }
@@ -1586,13 +1586,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1627,13 +1627,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_role.Response"
+                                            "$ref": "#/definitions/role.Response"
                                         }
                                     }
                                 }
@@ -1643,7 +1643,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1678,7 +1678,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_role.Request"
+                            "$ref": "#/definitions/role.Request"
                         }
                     }
                 ],
@@ -1688,13 +1688,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_role.Response"
+                                            "$ref": "#/definitions/role.Response"
                                         }
                                     }
                                 }
@@ -1704,13 +1704,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1741,13 +1741,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1784,7 +1784,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_role.AssignPermissionsRequest"
+                            "$ref": "#/definitions/role.AssignPermissionsRequest"
                         }
                     }
                 ],
@@ -1794,13 +1794,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_role.Response"
+                                            "$ref": "#/definitions/role.Response"
                                         }
                                     }
                                 }
@@ -1810,13 +1810,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1874,13 +1874,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_user_Response"
+                                            "$ref": "#/definitions/dto.PageResponse-user_Response"
                                         }
                                     }
                                 }
@@ -1890,13 +1890,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1922,13 +1922,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.Response"
+                                            "$ref": "#/definitions/user.Response"
                                         }
                                     }
                                 }
@@ -1938,7 +1938,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -1973,13 +1973,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.Response"
+                                            "$ref": "#/definitions/user.Response"
                                         }
                                     }
                                 }
@@ -1989,7 +1989,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2024,7 +2024,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_user.UpdateRequest"
+                            "$ref": "#/definitions/user.UpdateRequest"
                         }
                     }
                 ],
@@ -2034,13 +2034,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.Response"
+                                            "$ref": "#/definitions/user.Response"
                                         }
                                     }
                                 }
@@ -2050,19 +2050,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2093,13 +2093,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2135,13 +2135,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.Response"
+                                            "$ref": "#/definitions/user.Response"
                                         }
                                     }
                                 }
@@ -2151,7 +2151,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2187,13 +2187,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.Response"
+                                            "$ref": "#/definitions/user.Response"
                                         }
                                     }
                                 }
@@ -2203,13 +2203,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2243,13 +2243,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2287,7 +2287,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_user.AssignRolesRequest"
+                            "$ref": "#/definitions/user.AssignRolesRequest"
                         }
                     }
                 ],
@@ -2297,13 +2297,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                                    "$ref": "#/definitions/dto.ApiResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.Response"
+                                            "$ref": "#/definitions/user.Response"
                                         }
                                     }
                                 }
@@ -2313,13 +2313,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse"
+                            "$ref": "#/definitions/dto.ApiResponse"
                         }
                     }
                 }
@@ -2327,215 +2327,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.ApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "errors": {},
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                },
-                "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_audit_Log": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_audit.Log"
-                    }
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "first": {
-                    "type": "boolean"
-                },
-                "last": {
-                    "type": "boolean"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "totalElements": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_permission_Response": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_permission.Response"
-                    }
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "first": {
-                    "type": "boolean"
-                },
-                "last": {
-                    "type": "boolean"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "totalElements": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_product_Response": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_product.Response"
-                    }
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "first": {
-                    "type": "boolean"
-                },
-                "last": {
-                    "type": "boolean"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "totalElements": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_role_Response": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_role.Response"
-                    }
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "first": {
-                    "type": "boolean"
-                },
-                "last": {
-                    "type": "boolean"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "totalElements": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_session_Response": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_session.Response"
-                    }
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "first": {
-                    "type": "boolean"
-                },
-                "last": {
-                    "type": "boolean"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "totalElements": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_AkashAhmed66_gin-template_internal_common_dto.PageResponse-internal_modules_user_Response": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_user.Response"
-                    }
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "first": {
-                    "type": "boolean"
-                },
-                "last": {
-                    "type": "boolean"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                },
-                "totalElements": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_modules_audit.Log": {
+        "audit.Log": {
             "type": "object",
             "properties": {
                 "action": {
@@ -2594,7 +2386,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.AuthResponse": {
+        "auth.AuthResponse": {
             "type": "object",
             "properties": {
                 "accessToken": {
@@ -2626,7 +2418,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.ForgotPasswordRequest": {
+        "auth.ForgotPasswordRequest": {
             "type": "object",
             "required": [
                 "email"
@@ -2638,7 +2430,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.LoginRequest": {
+        "auth.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -2657,7 +2449,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.RefreshRequest": {
+        "auth.RefreshRequest": {
             "type": "object",
             "required": [
                 "refreshToken"
@@ -2668,7 +2460,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.RegisterRequest": {
+        "auth.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -2700,7 +2492,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.ResetPasswordRequest": {
+        "auth.ResetPasswordRequest": {
             "type": "object",
             "required": [
                 "newPassword",
@@ -2717,7 +2509,215 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_file.Response": {
+        "dto.ApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "errors": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PageResponse-audit_Log": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/audit.Log"
+                    }
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "first": {
+                    "type": "boolean"
+                },
+                "last": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "totalElements": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PageResponse-permission_Response": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/permission.Response"
+                    }
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "first": {
+                    "type": "boolean"
+                },
+                "last": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "totalElements": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PageResponse-product_Response": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/product.Response"
+                    }
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "first": {
+                    "type": "boolean"
+                },
+                "last": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "totalElements": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PageResponse-role_Response": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/role.Response"
+                    }
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "first": {
+                    "type": "boolean"
+                },
+                "last": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "totalElements": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PageResponse-session_Response": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/session.Response"
+                    }
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "first": {
+                    "type": "boolean"
+                },
+                "last": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "totalElements": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PageResponse-user_Response": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.Response"
+                    }
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "first": {
+                    "type": "boolean"
+                },
+                "last": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "totalElements": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "file.Response": {
             "type": "object",
             "properties": {
                 "contentType": {
@@ -2740,7 +2740,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_permission.Request": {
+        "permission.Request": {
             "type": "object",
             "required": [
                 "name"
@@ -2757,7 +2757,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_permission.Response": {
+        "permission.Response": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -2789,7 +2789,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_product.Request": {
+        "product.Request": {
             "type": "object",
             "required": [
                 "name",
@@ -2827,7 +2827,7 @@ const docTemplate = `{
                     ],
                     "allOf": [
                         {
-                            "$ref": "#/definitions/internal_modules_product.Status"
+                            "$ref": "#/definitions/product.Status"
                         }
                     ]
                 },
@@ -2837,7 +2837,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_product.Response": {
+        "product.Response": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -2871,7 +2871,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/internal_modules_product.Status"
+                    "$ref": "#/definitions/product.Status"
                 },
                 "stock": {
                     "type": "integer"
@@ -2884,7 +2884,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_product.Status": {
+        "product.Status": {
             "type": "string",
             "enum": [
                 "DRAFT",
@@ -2897,7 +2897,7 @@ const docTemplate = `{
                 "StatusArchived"
             ]
         },
-        "internal_modules_role.AssignPermissionsRequest": {
+        "role.AssignPermissionsRequest": {
             "type": "object",
             "required": [
                 "permissions"
@@ -2911,7 +2911,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_role.Request": {
+        "role.Request": {
             "type": "object",
             "required": [
                 "name"
@@ -2928,7 +2928,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_role.Response": {
+        "role.Response": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -2966,7 +2966,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_session.Response": {
+        "session.Response": {
             "type": "object",
             "properties": {
                 "current": {
@@ -3007,7 +3007,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.AssignRolesRequest": {
+        "user.AssignRolesRequest": {
             "type": "object",
             "required": [
                 "roles"
@@ -3021,7 +3021,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.Response": {
+        "user.Response": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -3071,7 +3071,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.UpdateRequest": {
+        "user.UpdateRequest": {
             "type": "object",
             "properties": {
                 "email": {

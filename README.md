@@ -58,7 +58,8 @@ cp .env.example .env
 ### 3. Install + run
 ```bash
 go mod tidy
-go run ./cmd/api
+swag init
+go run .
 ```
 Boot order: `.env` loads → DB connects → goose applies migrations → bootstrap admin is created if missing → HTTP server listens on `:8080`.
 
@@ -80,29 +81,118 @@ air
 
 ### 6. Swagger / OpenAPI
 
-Install the CLI once:
+The generated spec lives at [docs/](docs/) and is served at `/swagger/*` by the running app.
+
+**Install the CLI once** (writes to `$GOPATH/bin`, make sure that's on `PATH`):
 ```bash
+make swag-install
+# or directly:
 go install github.com/swaggo/swag/cmd/swag@latest
-# Ensure %USERPROFILE%\go\bin (or $HOME/go/bin) is on PATH
 swag --version
 ```
 
-Generate the spec from the annotations (re-run whenever you change them):
+**Generate the spec** — bare `swag init` works because `main.go` is at the project root:
 ```bash
-swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
-# or equivalently — the directive in cmd/api/main.go takes care of paths:
-go generate ./...
+swag init --parseDependency --parseInternal
 # or via the Makefile:
 make swag
+# or via go generate (uses the directive in main.go):
+go generate ./...
 ```
 
-Run the app and open:
+Re-run whenever you add or change `// @...` annotations on a handler, then restart the app — the spec is generated at build time, not at runtime.
+
+**Run the app and open**:
 - **Swagger UI** → http://localhost:8080/swagger/index.html
 - Spec JSON → http://localhost:8080/swagger/doc.json
 
 To call protected endpoints from the UI: click **Authorize** (top right), paste only the `accessToken` value — the `Bearer ` prefix is added automatically.
 
-See [Swagger / OpenAPI Annotations](#swagger--openapi-annotations) below for the annotation format.
+See [Swagger / OpenAPI Annotations](#swagger--openapi-annotations) below for the annotation format on individual handlers.
+
+---
+
+## Common commands cheatsheet
+
+Everything you'll do day-to-day. Pick the form that matches your shell (`make` works in Git Bash on Windows or any Unix shell; the bare commands work in PowerShell).
+
+### Setup (once per machine)
+
+```powershell
+# Install Go dependencies
+go mod tidy
+
+# Install the swag CLI for regenerating the Swagger spec
+make swag-install
+# or: go install github.com/swaggo/swag/cmd/swag@latest
+
+# Install goose for manual migration commands (optional — auto-run on boot)
+go install github.com/pressly/goose/v3/cmd/goose@latest
+
+# Install air for hot reload (optional)
+go install github.com/air-verse/air@latest
+```
+
+### Run
+
+```powershell
+# Plain run (migrations auto-apply, admin auto-seeds, server on :8080)
+go run .
+# or: make run
+
+# Hot reload (rebuilds + restarts on .go save; uses .air.toml)
+air
+# or: make dev
+```
+
+### Migrations (goose)
+
+Migrations run automatically on boot (`MIGRATIONS_AUTO_RUN=true`). To manage them by hand:
+
+```powershell
+# PowerShell — Postgres example
+$env:DB_DRIVER = "postgres"
+$env:DB_DSN    = "postgres://postgres:postgres@localhost:5432/gin_template?sslmode=disable"
+
+goose -dir migrations $env:DB_DRIVER "$env:DB_DSN" up         # apply all pending
+goose -dir migrations $env:DB_DRIVER "$env:DB_DSN" down       # roll back the latest
+goose -dir migrations $env:DB_DRIVER "$env:DB_DSN" status     # show what's applied
+
+goose -dir migrations create add_orders sql                   # create a new file
+```
+
+The Makefile wraps these as `make migrate-up`, `make migrate-down`, `make migrate-status`, `make migrate-create name=...`.
+
+### Swagger
+
+| What | Command |
+|---|---|
+| Install CLI | `make swag-install` |
+| Regenerate spec | `make swag` (or `go generate ./...` or `swag init --parseDependency --parseInternal`) |
+| View UI | http://localhost:8080/swagger/index.html (after the app is running) |
+
+Whenever you add or change `// @...` annotations on a handler, re-run `make swag` and restart the app — the spec is generated at build time, not at runtime.
+
+### Build
+
+```powershell
+# Local OS
+go build -o bin\gin-template.exe .
+# or: make build
+
+# Cross-compile a static Linux binary from Windows
+$env:GOOS="linux"; $env:GOARCH="amd64"; $env:CGO_ENABLED="0"
+go build -ldflags="-s -w" -o bin\gin-template .
+Remove-Item Env:GOOS, Env:GOARCH, Env:CGO_ENABLED
+```
+
+### Tests & code quality
+
+```powershell
+go test -race ./...      # or: make test
+go vet ./...             # or: make vet
+go fmt ./...             # or: make fmt
+```
 
 ---
 
@@ -128,7 +218,8 @@ BOOTSTRAP_ADMIN_PASSWORD=strong-pass
 
 ```
 gin-template/
-├── cmd/api/main.go                    ← entry point (composition)
+├── main.go                            ← entry point (composition)
+├── docs/                              ← generated Swagger spec (swag init writes here)
 ├── internal/
 │   ├── config/                        ← typed env loading (godotenv + struct)
 │   ├── logger/                        ← zap setup + context-scoped fields
@@ -419,7 +510,7 @@ Gin's bound binding (`binding:"required,email,max=255"`) is enforced by validato
 
 ## Swagger / OpenAPI Annotations
 
-Every handler in the template carries [swaggo/swag](https://github.com/swaggo/swag) annotations directly above the function. Running `swag init` (or `go generate ./...` or `make swag`) walks the source tree, parses these comments, and writes `docs/docs.go` + `docs/swagger.json` + `docs/swagger.yaml`. The blank import in [cmd/api/main.go](cmd/api/main.go) registers the spec at boot, and [internal/router/router.go](internal/router/router.go) mounts `gin-swagger` at `/swagger/*any`.
+Every handler in the template carries [swaggo/swag](https://github.com/swaggo/swag) annotations directly above the function. Running `swag init` (or `go generate ./...` or `make swag`) walks the source tree, parses these comments, and writes `docs/docs.go` + `docs/swagger.json` + `docs/swagger.yaml`. The blank import in [main.go](main.go) registers the spec at boot, and [internal/router/router.go](internal/router/router.go) mounts `gin-swagger` at `/swagger/*any`.
 
 ### The annotation contract
 
@@ -452,7 +543,7 @@ func (h *Handler) login(c *gin.Context) (*dto.ApiResponse, error) { ... }
 | `@Tags` | yes | Use the resource name (`users`, `roles`, `products`). Group admin endpoints under `admin-<resource>`. |
 | `@Accept` | only for endpoints with a body | `json`, `multipart/form-data`, `application/x-www-form-urlencoded`, `xml` |
 | `@Produce` | yes | Almost always `json`. Use `octet-stream` for file downloads. |
-| `@Security` | only for protected endpoints | `BearerAuth` — defined in [cmd/api/main.go](cmd/api/main.go) via `@securityDefinitions.apikey BearerAuth`. |
+| `@Security` | only for protected endpoints | `BearerAuth` — defined in [main.go](main.go) via `@securityDefinitions.apikey BearerAuth`. |
 | `@Param` | one per param | Format: `name location type required "description"`. Locations: `path`, `query`, `header`, `body`, `formData`. |
 | `@Success` / `@Failure` | at least one `@Success` | Format: `status {schema-type} type-ref`. `{object}` for structs, `{array}` for slices, `{file}` for binaries, `{string}` for plain text. |
 | `@Router` | yes | The route path **as the client sees it**, then `[method]`. Must match what the handler is registered at. |
@@ -481,9 +572,9 @@ swag resolves type references based on the **current file's imports**. If your h
 ```powershell
 # 1. Add or edit annotations on your handler
 # 2. Regenerate
-go generate ./...
+make swag                # or: go generate ./...   or: swag init --parseDependency --parseInternal
 # 3. Restart the app
-go run .\cmd\api
+go run .
 # 4. Refresh http://localhost:8080/swagger/index.html
 ```
 
@@ -493,9 +584,9 @@ If the UI shows **"Failed to load API definition — 500 doc.json"**, you forgot
 
 | File | Role |
 |---|---|
-| [cmd/api/main.go](cmd/api/main.go) | `@title` / `@version` / `@BasePath` / `@securityDefinitions` block. Blank-imports `docs/`. Carries the `go:generate` directive. |
-| [docs/docs.go](docs/docs.go) | **Generated.** Don't hand-edit — `swag init` overwrites it. |
-| [docs/swagger.json](docs/swagger.json), [docs/swagger.yaml](docs/swagger.yaml) | **Generated.** Same warning. Both gitignored by default. |
+| [main.go](main.go) | `@title` / `@version` / `@BasePath` / `@securityDefinitions` block. Blank-imports `docs/`. Carries the `go:generate` directive. |
+| [docs/docs.go](docs/docs.go) | **Generated.** Don't hand-edit — `swag init` overwrites it. The placeholder version is committed so the build works before the first generation. |
+| `docs/swagger.json`, `docs/swagger.yaml` | **Generated.** Both gitignored by default. |
 | [internal/router/router.go](internal/router/router.go) | Mounts `gin-swagger` at `/swagger/*any`. |
 | [internal/modules/*/handler.go](internal/modules/) | All endpoint-level annotations. Every existing endpoint already has one — copy the shape when adding new ones. |
 
@@ -506,9 +597,10 @@ If the UI shows **"Failed to load API definition — 500 doc.json"**, you forgot
 | `Failed to load API definition — Internal Server Error doc.json` | Spec hasn't been generated. Run `go generate ./...` then restart. |
 | `unknown field LeftDelim in Spec` build error | swag CLI is newer than the library — `go get github.com/swaggo/swag@latest && go mod tidy`. |
 | `cannot find type definition: foo.Bar` while running `swag init` | The handler file doesn't import that package. Use a local alias or drop the `data=` portion. |
-| `chdir cmd/api/cmd/api: The system cannot find the path specified` | You moved the `go:generate` directive but used absolute-looking paths. Paths in the directive are relative to the directive's own file. Use `-d ../../ -g cmd/api/main.go -o ../../docs`. |
+| `cannot find file: main.go` from `swag init` | You ran swag from a subdirectory. Run it from the project root: `cd c:\projects\go\gin-template; swag init --parseDependency --parseInternal`. |
+| Empty `paths: {}` in the generated spec | swag couldn't find your handlers. Make sure you're running from the project root and pass `--parseDependency --parseInternal`. |
 | New endpoint missing from the UI | Forgot to re-run `swag init` after adding annotations, or your `@Router` path doesn't match what's actually registered. |
-| UI shows the spec but `Authorize` button doesn't work | `@Security BearerAuth` is missing on the endpoint, or the `@securityDefinitions.apikey BearerAuth` block in `cmd/api/main.go` was deleted. |
+| UI shows the spec but `Authorize` button doesn't work | `@Security BearerAuth` is missing on the endpoint, or the `@securityDefinitions.apikey BearerAuth` block in `main.go` was deleted. |
 
 ---
 
@@ -610,7 +702,7 @@ goose -dir migrations postgres "postgres://user:pass@localhost/db?sslmode=disabl
 go mod tidy
 
 # Run
-go run ./cmd/api
+go run .
 
 # Hot reload (requires air)
 air
@@ -619,7 +711,7 @@ air
 go test -race ./...
 
 # Build
-go build -o bin/gin-template ./cmd/api
+go build -o bin/gin-template .
 ./bin/gin-template
 ```
 
