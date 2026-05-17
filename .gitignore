@@ -1,0 +1,43 @@
+# Binaries
+/bin/
+/tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+app
+app.exe
+
+# Test / coverage
+*.test
+*.out
+coverage.html
+
+# Env / secrets
+.env
+.env.local
+*.local.env
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Swagger generated — placeholder docs.go is committed; spec output is not
+docs/swagger.json
+docs/swagger.yaml
+
+# Air hot-reload
+tmp/
