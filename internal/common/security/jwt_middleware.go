@@ -85,9 +85,16 @@ func RequireAuth() gin.HandlerFunc {
 }
 
 func extractBearer(h string) string {
-	const prefix = "Bearer "
-	if len(h) <= len(prefix) || !strings.EqualFold(h[:len(prefix)], prefix) {
+	h = strings.TrimSpace(h)
+	if h == "" {
 		return ""
 	}
-	return strings.TrimSpace(h[len(prefix):])
+	const prefix = "Bearer "
+	if len(h) > len(prefix) && strings.EqualFold(h[:len(prefix)], prefix) {
+		return strings.TrimSpace(h[len(prefix):])
+	}
+	// Accept a raw token without the "Bearer " prefix. Swagger UI's apiKey
+	// scheme sends the value as-is, so users pasting only the JWT would
+	// otherwise get 401s.
+	return h
 }

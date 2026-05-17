@@ -58,9 +58,14 @@ type DBConfig struct {
 }
 
 type LogConfig struct {
-	Level  string
-	Format string // console | json
-	Dir    string
+	Level      string
+	Format     string // console | json
+	Dir        string
+	File       string // log filename inside Dir (e.g. "app.log"); empty disables file output
+	MaxSizeMB  int    // rotate when the active log reaches this size (megabytes)
+	MaxBackups int    // max rotated files to keep before deletion (0 = unlimited)
+	MaxAgeDays int    // delete rotated files older than this many days (0 = no age limit)
+	Compress   bool   // gzip rotated files
 }
 
 type JWTConfig struct {
@@ -175,9 +180,14 @@ func Load() (*Config, error) {
 			ConnMaxLifetime: getDuration("DB_POOL_CONN_MAX_LIFETIME", time.Hour),
 		},
 		Log: LogConfig{
-			Level:  getString("LOG_LEVEL", "info"),
-			Format: getString("LOG_FORMAT", "console"),
-			Dir:    getString("LOG_DIR", "logs"),
+			Level:      getString("LOG_LEVEL", "info"),
+			Format:     getString("LOG_FORMAT", "console"),
+			Dir:        getString("LOG_DIR", "logs"),
+			File:       getString("LOG_FILE", "app.log"),
+			MaxSizeMB:  getInt("LOG_MAX_SIZE_MB", 100),
+			MaxBackups: getInt("LOG_MAX_BACKUPS", 7),
+			MaxAgeDays: getInt("LOG_MAX_AGE_DAYS", 2),
+			Compress:   getBool("LOG_COMPRESS", true),
 		},
 		JWT: JWTConfig{
 			Secret:     getString("JWT_SECRET", "change-me-in-prod"),

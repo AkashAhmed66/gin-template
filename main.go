@@ -37,6 +37,7 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
+// @description Paste your JWT access token. You may include the "Bearer " prefix or omit it — both are accepted.
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

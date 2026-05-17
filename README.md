@@ -60,14 +60,14 @@ cp .env.example .env
 The `docs/` folder is gitignored — it's regenerated locally. On a **fresh clone you MUST generate it before the first `go run`**, otherwise the build fails on the blank import in `main.go`.
 
 ```bash
-# Sync Go dependencies
-go mod tidy
-
 # One-time: install the swag CLI (writes to $GOPATH/bin — make sure that's on PATH)
 go install github.com/swaggo/swag/cmd/swag@latest
 
 # Generate the Swagger spec into docs/ — required before the first run
 swag init --parseDependency --parseInternal
+
+# Sync Go dependencies
+go mod tidy
 
 # Run
 go run .
