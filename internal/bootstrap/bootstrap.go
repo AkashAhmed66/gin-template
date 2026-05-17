@@ -8,13 +8,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
+	"time"
 
 	"github.com/AkashAhmed66/gin-template/internal/common/audit"
 	"github.com/AkashAhmed66/gin-template/internal/common/idempotency"
+	"github.com/AkashAhmed66/gin-template/internal/common/jobs"
 	"github.com/AkashAhmed66/gin-template/internal/common/mail"
+	"github.com/AkashAhmed66/gin-template/internal/common/queue"
 	"github.com/AkashAhmed66/gin-template/internal/common/ratelimit"
+	"github.com/AkashAhmed66/gin-template/internal/common/scheduler"
 	"github.com/AkashAhmed66/gin-template/internal/common/security"
+	"github.com/AkashAhmed66/gin-template/internal/common/worker"
 	"github.com/AkashAhmed66/gin-template/internal/config"
 	auditmod "github.com/AkashAhmed66/gin-template/internal/modules/audit"
 	authmod "github.com/AkashAhmed66/gin-template/internal/modules/auth"
@@ -61,8 +65,9 @@ type Deps struct {
 	FileHandler    *filemod.Handler
 	ProductHandler *productmod.Handler
 
-	jobCancel context.CancelFunc
-	jobWG     sync.WaitGroup
+	Scheduler *scheduler.Scheduler
+	Pool      *worker.Pool
+	Queue     *queue.Manager
 }
 
 // NewDependencies wires the full graph. Anything that needs to be a singleton
@@ -94,6 +99,28 @@ func NewDependencies(cfg *config.Config, db *gorm.DB, log *zap.Logger) (*Deps, e
 	fileSvc := filemod.New(cfg.Storage, cfg.Mail.AppURL)
 	productSvc := productmod.NewService(productmod.NewRepository(db))
 
+	tz, err := time.LoadLocation(cfg.Jobs.Timezone)
+	if err != nil {
+		log.Warn("invalid JOBS_TIMEZONE, falling back to UTC",
+			zap.String("value", cfg.Jobs.Timezone), zap.Error(err))
+		tz = time.UTC
+	}
+	sched := scheduler.New(log, tz)
+	pool := worker.NewPool(cfg.Jobs.WorkerPoolSize, cfg.Jobs.QueueSize, log)
+	jobs.Set(&jobs.Manager{Scheduler: sched, Pool: pool})
+
+	qmgr, err := queue.New(cfg.Queue, cfg.Redis, log)
+	if err != nil {
+		return nil, fmt.Errorf("queue init: %w", err)
+	}
+	queue.Set(qmgr)
+	if qmgr != nil {
+		log.Info("redis queue enabled",
+			zap.String("addr", cfg.Redis.Addr),
+			zap.Int("concurrency", cfg.Queue.Concurrency),
+		)
+	}
+
 	d := &Deps{
 		Cfg: cfg, DB: db, Log: log,
 		JWT: jwtSvc, RateLimit: rl, Idem: idemStore, Mail: mailSvc,
@@ -110,23 +137,97 @@ func NewDependencies(cfg *config.Config, db *gorm.DB, log *zap.Logger) (*Deps, e
 		AuditHandler:   auditmod.NewHandler(auditSvc, cfg.Audit),
 		FileHandler:    filemod.NewHandler(fileSvc),
 		ProductHandler: productmod.NewHandler(productSvc, fileSvc),
+
+		Scheduler: sched,
+		Pool:      pool,
+		Queue:     qmgr,
 	}
+
+	// Register asynq handlers. Each module that owns a task type registers it
+	// here (or from its own constructor). Handlers must be registered BEFORE
+	// the queue server starts in StartBackgroundJobs.
+	if d.Queue != nil {
+		authmod.RegisterQueueHandlers(d.Queue, d.Mail, d.Log)
+	}
+
 	return d, nil
 }
 
-// StartBackgroundJobs kicks off all periodic cleanup goroutines.
+// StartBackgroundJobs spins up the worker pool and registers the built-in
+// recurring cleanup jobs on the scheduler, then starts the scheduler. Any
+// service can register additional jobs via jobs.Every / jobs.Cron / jobs.Submit.
 func (d *Deps) StartBackgroundJobs() {
-	ctx, cancel := context.WithCancel(context.Background())
-	d.jobCancel = cancel
-	sessionmod.StartCleanup(ctx, d.Sessions, d.Cfg.Sessions, d.Log)
-	idempotency.StartCleanup(ctx, d.Idem, d.Cfg.Idem, d.Log)
-	authmod.StartResetTokenCleanup(ctx, d.Auth, d.Cfg.Mail, d.Log)
+	if !d.Cfg.Jobs.Enabled {
+		d.Log.Info("background jobs disabled (JOBS_ENABLED=false)")
+		return
+	}
+	d.Pool.Start()
+	d.registerBuiltInJobs()
+	d.Scheduler.Start()
+
+	if d.Queue != nil {
+		go func() {
+			if err := d.Queue.Start(); err != nil {
+				d.Log.Error("queue server stopped", zap.Error(err))
+			}
+		}()
+	}
 }
 
-// StopBackgroundJobs cancels the cleanup goroutines.
-func (d *Deps) StopBackgroundJobs(_ context.Context) {
-	if d.jobCancel != nil {
-		d.jobCancel()
+// StopBackgroundJobs cancels scheduled jobs and drains the worker pool + queue.
+func (d *Deps) StopBackgroundJobs(ctx context.Context) {
+	if !d.Cfg.Jobs.Enabled {
+		return
+	}
+	if d.Queue != nil {
+		d.Queue.Stop(ctx)
+	}
+	d.Scheduler.Stop(ctx)
+	d.Pool.Stop(ctx)
+}
+
+// registerBuiltInJobs wires the template's stock cleanup routines onto the
+// scheduler. Add new application-level jobs anywhere via the jobs.* helpers.
+func (d *Deps) registerBuiltInJobs() {
+	if iv := d.Cfg.Sessions.CleanupInterval; iv > 0 {
+		_ = d.Scheduler.Every("session-cleanup", iv, func(ctx context.Context) error {
+			n, err := d.Sessions.CleanupExpired(ctx, d.Cfg.Sessions.CleanupRetention)
+			if err != nil {
+				return err
+			}
+			if n > 0 {
+				d.Log.Info("session cleanup", zap.Int64("deleted", n))
+			}
+			return nil
+		})
+	}
+
+	if d.Cfg.Idem.Enabled {
+		if iv := d.Cfg.Idem.CleanupInterval; iv > 0 {
+			_ = d.Scheduler.Every("idempotency-cleanup", iv, func(ctx context.Context) error {
+				n, err := d.Idem.DeleteExpired(ctx, time.Now().UTC())
+				if err != nil {
+					return err
+				}
+				if n > 0 {
+					d.Log.Info("idempotency cleanup", zap.Int64("deleted", n))
+				}
+				return nil
+			})
+		}
+	}
+
+	if iv := d.Cfg.Mail.PasswordResetCleanupInterval; iv > 0 {
+		_ = d.Scheduler.Every("password-reset-cleanup", iv, func(ctx context.Context) error {
+			n, err := d.Auth.CleanupExpiredResetTokens(ctx)
+			if err != nil {
+				return err
+			}
+			if n > 0 {
+				d.Log.Info("password reset cleanup", zap.Int64("deleted", n))
+			}
+			return nil
+		})
 	}
 }
 

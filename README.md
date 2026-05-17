@@ -14,6 +14,10 @@ This is the Gin port of [spring-boot-template](../spring-boot-template) — same
 4. [Project Structure](#project-structure)
 5. [Adding a New API Module](#adding-a-new-api-module)
 6. [Cross-Cutting Concerns](#cross-cutting-concerns)
+   - [Logging — zap + rotation + per-domain files](#logging--zap--rotation--per-domain-files)
+   - [Background Scheduler — `jobs.Every` / `jobs.Cron` / `jobs.Once`](#background-scheduler--jobsevery--jobscron--jobsonce)
+   - [In-process Worker Pool — `jobs.Submit`](#in-process-worker-pool--jobssubmit)
+   - [Persistent Task Queue — `queue.Enqueue` (Redis-backed, asynq)](#persistent-task-queue--queueenqueue-redis-backed-asynq)
 7. [Configuration Reference](#configuration-reference)
 8. [Built-in Endpoints](#built-in-endpoints)
 9. [Database Migrations](#database-migrations)
@@ -31,7 +35,10 @@ This is the Gin port of [spring-boot-template](../spring-boot-template) — same
 | Migrations     | [goose](https://github.com/pressly/goose) |
 | Security       | [golang-jwt/jwt v5](https://github.com/golang-jwt/jwt) (HS256), bcrypt |
 | Validation     | [go-playground/validator v10](https://github.com/go-playground/validator) (built into Gin) |
-| Logging        | [zap](https://github.com/uber-go/zap) — console (dev) or JSON (prod) |
+| Logging        | [zap](https://github.com/uber-go/zap) + [lumberjack](https://github.com/natefinch/lumberjack) — console (dev) / JSON (prod), file rotation, per-domain log files |
+| Scheduler      | In-process intervals + [robfig/cron/v3](https://github.com/robfig/cron) cron specs, with panic recovery |
+| Worker pool    | In-process bounded goroutine pool for fire-and-forget async work |
+| Persistent queue | [hibiken/asynq](https://github.com/hibiken/asynq) — Redis-backed, retries, delayed tasks, priority queues, dashboard |
 | Config         | [joho/godotenv](https://github.com/joho/godotenv) + typed struct |
 | Mail           | stdlib `net/smtp` + `html/template` |
 | Docs           | [swaggo/swag](https://github.com/swaggo/swag) — annotation-driven Swagger UI |
@@ -249,8 +256,13 @@ gin-template/
 │   │   ├── web/                       request_id · logging · recovery · cors · handler wrapper
 │   │   ├── security/                  JwtService · JWTAuth · HasRole/HasPermission · password
 │   │   ├── ratelimit/                 Token bucket + middleware
-│   │   ├── idempotency/               Replay-safe store + middleware + cleanup job
-│   │   └── mail/                      SMTP service + HTML template renderer
+│   │   ├── idempotency/               Replay-safe store + middleware
+│   │   ├── mail/                      SMTP service + HTML template renderer
+│   │   ├── applog/                    Per-domain rotating log files with actor enrichment
+│   │   ├── scheduler/                 Recurring jobs (Every / Cron / Once) with panic recovery
+│   │   ├── worker/                    In-process bounded goroutine pool
+│   │   ├── jobs/                      Global accessor for scheduler + worker pool
+│   │   └── queue/                     Persistent task queue (asynq + Redis)
 │   └── modules/                       ← every feature lives here, identical shape
 │       ├── permission/                names · model · dto · repo · service · handler
 │       ├── role/                      same shape, owns role-permission M:N
@@ -512,6 +524,242 @@ mutators.Use(idempotency.Middleware(deps.Idem, cfg.Idem))
 ### Mail
 SMTP via `net/smtp`. Off by default (`MAIL_ENABLED=false`) so misconfigured local runs don't silently swallow notifications. Templates in `templates/email/*.html` use stdlib `html/template`.
 
+### Logging — zap + rotation + per-domain files
+
+The template uses **zap** for all logging with a tee:
+- **stdout** — always on, console-encoded in dev (colored) or JSON in prod (`LOG_FORMAT`).
+- **file sink** — `LOG_DIR/LOG_FILE` (default `logs/app.log`), JSON-encoded, rotated by [lumberjack](https://github.com/natefinch/lumberjack).
+
+Rotation knobs (env):
+```
+LOG_MAX_SIZE_MB=100   # rotate when active file hits this size
+LOG_MAX_BACKUPS=7     # keep at most N rotated files
+LOG_MAX_AGE_DAYS=2    # delete rotated files older than N days
+LOG_COMPRESS=true     # gzip rotated files
+```
+
+After rotation, `logs/` looks like:
+```
+logs/
+├── app.log                                       # active, growing
+├── app-2026-05-17T14-55-51.452.log.gz           # rotated, gzipped
+└── app-2026-05-16T09-12-03.117.log.gz
+```
+
+Anything older than `LOG_MAX_AGE_DAYS` or beyond `LOG_MAX_BACKUPS` is auto-deleted. Set `LOG_FILE=` (empty) to disable file output and keep only stdout.
+
+#### Writing logs
+
+| What you need | Use this |
+|---|---|
+| Plain logger | `logger.L().Info("...", zap.Int(...))` |
+| Request-scoped (carries `request_id`, `username`) | `logger.FromContext(ctx).Info(...)` |
+| Custom file (no request context) | `logger.File("background.log").Info(...)` |
+| Custom file + request fields | `logger.FromContextFile(ctx, "audit.log").Info(...)` |
+
+#### Per-domain log files (recommended pattern)
+
+For business events that deserve their own file, use the **applog** package — it routes the line to a domain file and automatically attaches the acting user (`actorId` + `actor`) from the security principal.
+
+```go
+import "github.com/AkashAhmed66/gin-template/internal/common/applog"
+
+// Once at the package level — bind the filename
+var plog = applog.Channel("products.log")
+
+// At call sites — just pass ctx
+plog(ctx).Info("product created",
+    zap.Uint64("productId", p.ID),
+    zap.String("sku", p.SKU),
+)
+```
+
+The line lands in `logs/products.log` with stdout still receiving a copy. Caching means repeated `plog(ctx)` calls are cheap.
+
+See [internal/modules/product/service.go](internal/modules/product/service.go) for the reference implementation.
+
+> **Important**: `ctx` is unavoidable — it carries `requestId`, `username`, and the security principal. Without it the line in the file has no correlation back to the originating request. For truly stateless background logs use `logger.File("name.log")` instead.
+
+### Background Scheduler — `jobs.Every` / `jobs.Cron` / `jobs.Once`
+
+Recurring and one-off jobs running **in-process**. Survives the running process only — use the queue (next section) for work that must survive restarts.
+
+```go
+import "github.com/AkashAhmed66/gin-template/internal/common/jobs"
+
+// Periodic — every N duration
+jobs.Every("audit-flush", 30*time.Second, func(ctx context.Context) error {
+    return s.flushPending(ctx)
+})
+
+// Cron — 5-field spec, evaluated in JOBS_TIMEZONE
+jobs.Cron("nightly-report", "0 3 * * *", func(ctx context.Context) error {
+    return s.generateReport(ctx)
+})
+
+// One-off — fires after delay
+jobs.Once("retry-webhook", 5*time.Minute, func(ctx context.Context) error {
+    return s.retryWebhook(ctx, id)
+})
+```
+
+**What you get for free:** panic recovery (a panic in one job doesn't kill the others), startup jitter so jobs don't all fire at t=0, graceful shutdown via the lifecycle hook.
+
+**Built-in jobs** registered by bootstrap:
+- `session-cleanup` — purges expired/revoked sessions on `SESSIONS_CLEANUP_INTERVAL`
+- `idempotency-cleanup` — drops expired idempotency records on `IDEMPOTENCY_CLEANUP_INTERVAL`
+- `password-reset-cleanup` — drops consumed/expired reset tokens on `MAIL_PASSWORD_RESET_CLEANUP_INTERVAL`
+
+**Cron quick reference:**
+| Spec | Meaning |
+|---|---|
+| `*/15 * * * *` | every 15 minutes |
+| `0 * * * *` | top of every hour |
+| `0 3 * * *` | daily at 03:00 |
+| `0 9 * * 1-5` | weekday mornings at 09:00 |
+| `0 0 1 * *` | first day of every month at midnight |
+
+### In-process Worker Pool — `jobs.Submit`
+
+Bounded goroutine pool for fire-and-forget async work where loss-on-crash is acceptable.
+
+```go
+// Non-blocking submit. Returns false if queue is full.
+ok := jobs.Submit(func(ctx context.Context) error {
+    return s.cacheWarm(ctx, key)
+})
+
+// Blocking submit (backpressure-aware).
+err := jobs.SubmitBlocking(ctx, func(ctx context.Context) error {
+    return s.heavyTask(ctx)
+})
+```
+
+**Capacity tuning:**
+- `JOBS_WORKER_POOL_SIZE` (default 8) — concurrent workers
+- `JOBS_QUEUE_SIZE` (default 1024) — buffered queue depth before `Submit` returns false
+
+Use this for **ephemeral** work. For anything that **must run even if the server crashes** (emails, payments, webhooks), use the persistent queue instead.
+
+### Persistent Task Queue — `queue.Enqueue` (Redis-backed, asynq)
+
+For work that needs **persistence, retries, delays, and multi-instance distribution**. Backed by Redis via [hibiken/asynq](https://github.com/hibiken/asynq).
+
+#### When to use which
+
+| Use case | Use |
+|---|---|
+| Recurring cleanups, periodic syncs | `jobs.Every` / `jobs.Cron` |
+| Fire-and-forget, OK to lose on crash (cache warm, log flush) | `jobs.Submit` |
+| Email, push notification, webhook, payment, anything that **must** complete | `queue.Enqueue` |
+| Scheduled work ("send in 24 hours", "bill on Jan 1") | `queue.EnqueueIn` / `queue.EnqueueAt` |
+
+#### Setup
+
+1. **Run Redis**:
+   ```bash
+   docker run -d --name redis -p 6379:6379 redis:7-alpine
+   ```
+2. **Enable in [.env](.env)**:
+   ```
+   QUEUE_ENABLED=true
+   REDIS_ADDR=localhost:6379
+   REDIS_PASSWORD=
+   REDIS_DB=0
+   QUEUE_CONCURRENCY=10
+   QUEUE_PRIORITIES=critical=6,default=3,low=1
+   ```
+3. **Restart** — you'll see `redis queue enabled` in the logs.
+
+If `QUEUE_ENABLED=false`, every `queue.Enqueue` returns `ErrNotInstalled` so callers can fall back to a synchronous path. See `ForgotPassword` in [internal/modules/auth/service.go](internal/modules/auth/service.go) for the pattern.
+
+#### Defining a task
+
+Two parts: **payload + handler** (registered once), and **enqueue calls** (anywhere).
+
+```go
+// 1. internal/modules/auth/queue.go — declare task type + payload + handler
+const TaskPasswordResetEmail = "auth:password-reset-email"
+
+type PasswordResetEmailPayload struct {
+    Email    string `json:"email"`
+    Username string `json:"username"`
+    ResetURL string `json:"resetUrl"`
+    TTL      string `json:"ttl"`
+}
+
+func RegisterQueueHandlers(q *queue.Manager, mailer mail.Service, log *zap.Logger) {
+    q.Handle(TaskPasswordResetEmail, func(ctx context.Context, body []byte) error {
+        var p PasswordResetEmailPayload
+        if err := json.Unmarshal(body, &p); err != nil { return err }
+        return sendEmail(ctx, mailer, p)
+    })
+}
+
+// 2. internal/bootstrap/bootstrap.go — wire it once
+if d.Queue != nil {
+    authmod.RegisterQueueHandlers(d.Queue, d.Mail, d.Log)
+}
+
+// 3. Anywhere in your code — enqueue
+queue.Enqueue(ctx, auth.TaskPasswordResetEmail, auth.PasswordResetEmailPayload{
+    Email: u.Email, Username: u.Username, ResetURL: url, TTL: ttl,
+})
+```
+
+#### Enqueue options
+
+```go
+queue.Enqueue(ctx, "report:daily", payload,
+    queue.Queue("low"),                  // route to "low" priority lane
+    queue.MaxRetry(3),                   // override default retries
+    queue.Timeout(2*time.Minute),        // cancel handler after 2 min
+    queue.Unique(1*time.Hour),           // dedup within 1h window
+)
+
+queue.EnqueueIn(ctx, "order:reminder", payload, 24*time.Hour)
+queue.EnqueueAt(ctx, "subscription:bill", payload, billDate)
+```
+
+#### Built-in retry schedule
+
+Failed tasks retry at: **1m → 5m → 30m → 1h → 6h → 24h**. After exhausting retries, tasks go to the **archived** state for inspection (and optional replay) — they're not silently lost.
+
+#### Closures vs typed payloads — the one trade-off
+
+The in-process worker pool (`jobs.Submit`) accepts Go closures that capture variables. The persistent queue **does not** — tasks must be JSON-serialisable payloads, because they're stored in Redis and a worker on a different instance can't dereference closure-captured variables. This is the standard model for any persistent queue (Sidekiq, Celery, Bull).
+
+#### Observability — Asynqmon web UI
+
+asynq ships with a free dashboard showing queue depth, active tasks, retries, archived failures (with payloads + error traces). The repo includes a [docker-compose.yml](docker-compose.yml) that starts both Redis and Asynqmon:
+
+```bash
+docker compose up -d
+```
+
+- Asynqmon UI → http://localhost:8081
+- Redis → `localhost:6379`
+
+Or run the binary directly:
+
+```bash
+go install github.com/hibiken/asynqmon/cmd/asynqmon@latest
+asynqmon --redis-addr=localhost:6379 --port=8081
+```
+
+From the UI you can inspect any task's payload + error trace, re-enqueue archived failures (e.g. after fixing a bug), pause/unpause queues, and watch live throughput.
+
+> **Production note**: Asynqmon ships with no auth. Bind it to localhost and tunnel over SSH, or put it behind a reverse proxy with auth. Don't expose it publicly.
+
+#### Multi-instance behaviour
+
+When multiple instances connect to the same Redis:
+- **Enqueued tasks** are distributed across workers on any instance automatically.
+- **Crashed instance** → in-flight tasks return to the queue for retry by another instance.
+- **No duplicate processing** — exactly one worker picks up each task.
+
+This is what unlocks horizontal scaling for async work.
+
 ### Validation & Exceptions
 Gin's bound binding (`binding:"required,email,max=255"`) is enforced by validator.v10. Failures produce:
 ```json
@@ -652,6 +900,40 @@ See [.env.example](.env.example) — every variable is documented inline. Highli
 | `SESSIONS_CLEANUP_INTERVAL` | `1h` | Cleanup job cadence |
 | `SESSIONS_CLEANUP_RETENTION` | `168h` (7d) | Retention past expiry for forensics |
 
+### Logging
+| Variable | Default | Purpose |
+|---|---|---|
+| `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
+| `LOG_FORMAT` | `console` | `console` (colored, for terminals) or `json` (for log aggregators) |
+| `LOG_DIR` | `logs` | Directory for log files (empty disables file output) |
+| `LOG_FILE` | `app.log` | Filename inside `LOG_DIR` (empty disables file output) |
+| `LOG_MAX_SIZE_MB` | `100` | Rotate when active log file reaches this size |
+| `LOG_MAX_BACKUPS` | `7` | Keep at most N rotated files (0 = unlimited) |
+| `LOG_MAX_AGE_DAYS` | `2` | Delete rotated files older than N days (0 = no age limit) |
+| `LOG_COMPRESS` | `true` | gzip rotated files |
+
+### Background jobs (in-process scheduler + worker pool)
+| Variable | Default | Purpose |
+|---|---|---|
+| `JOBS_ENABLED` | `true` | Master switch for the in-process scheduler + worker pool |
+| `JOBS_WORKER_POOL_SIZE` | `8` | Concurrent workers consuming the queue |
+| `JOBS_QUEUE_SIZE` | `1024` | Buffered queue depth before `Submit` returns false |
+| `JOBS_TIMEZONE` | `UTC` | IANA tz for cron specs (e.g. `Asia/Dhaka`) |
+
+### Redis (for the persistent queue)
+| Variable | Default | Purpose |
+|---|---|---|
+| `REDIS_ADDR` | `localhost:6379` | Redis host:port |
+| `REDIS_PASSWORD` | _(empty)_ | Auth password if Redis requires one |
+| `REDIS_DB` | `0` | Logical DB number (0–15) |
+
+### Persistent task queue (asynq)
+| Variable | Default | Purpose |
+|---|---|---|
+| `QUEUE_ENABLED` | `false` | Turn on the asynq queue (requires reachable Redis) |
+| `QUEUE_CONCURRENCY` | `10` | Total workers on this instance across all queues |
+| `QUEUE_PRIORITIES` | `critical=6,default=3,low=1` | `name=weight,...` for weighted round-robin |
+
 Full reference in [.env.example](.env.example).
 
 ---
@@ -743,5 +1025,5 @@ See [Makefile](Makefile) for the full set of dev commands.
 
 - **Caching layer** — Spring's `@Cacheable` is replaceable in idiomatic Go with a service-layer interface + Redis adapter. Add when you need it; don't pre-build.
 - **Distributed rate limiting** — single-instance buckets are enough until you scale horizontally. Swap to Redis (`bucket4j-redis` equivalent: Go has `github.com/redis/go-redis/v9`-backed implementations) without touching the middleware.
-- **Background job queue** — for anything heavier than periodic cleanup, plug in `asynq` or similar.
 - **Multi-tenancy** — out of scope; add at the model layer if needed (every entity gets a `tenant_id` column + the JWT carries `tid`).
+- **Tests / CI / Dockerfile** — see the audit in the docs for the suggested ordering.

@@ -11,6 +11,7 @@ import (
 
 	"github.com/AkashAhmed66/gin-template/internal/common/errs"
 	"github.com/AkashAhmed66/gin-template/internal/common/mail"
+	"github.com/AkashAhmed66/gin-template/internal/common/queue"
 	"github.com/AkashAhmed66/gin-template/internal/common/security"
 	"github.com/AkashAhmed66/gin-template/internal/config"
 	"github.com/AkashAhmed66/gin-template/internal/modules/permission"
@@ -239,20 +240,24 @@ func (s *service) ForgotPassword(ctx context.Context, req ForgotPasswordRequest)
 		return nil
 	}
 
-	resetURL := fmt.Sprintf("%s/reset-password?token=%s", s.mailCfg.AppURL, rawToken)
-	body, err := s.mail.Render("password-reset.html", map[string]any{
-		"Username": u.Username,
-		"ResetURL": resetURL,
-		"TTL":      s.mailCfg.PasswordResetTTL.String(),
-	})
-	if err != nil {
-		body = fmt.Sprintf("Reset your password: %s\n(link expires in %s)", resetURL, s.mailCfg.PasswordResetTTL)
+	payload := PasswordResetEmailPayload{
+		Email:    u.Email,
+		Username: u.Username,
+		ResetURL: fmt.Sprintf("%s/reset-password?token=%s", s.mailCfg.AppURL, rawToken),
+		TTL:      s.mailCfg.PasswordResetTTL.String(),
 	}
-	_ = s.mail.Send(ctx, mail.Message{
-		To:      []string{u.Email},
-		Subject: "Reset your password",
-		HTML:    body,
-	})
+
+	// Enqueue when Redis-backed queue is enabled: persisted, retried, processed
+	// out-of-band so the HTTP response returns immediately. Fall back to a sync
+	// send when the queue isn't installed (e.g. dev without Redis).
+	if err := queue.Enqueue(ctx, TaskPasswordResetEmail, payload); err != nil {
+		if !errors.Is(err, queue.ErrNotInstalled) {
+			s.log.Warn("enqueue password reset email failed, sending inline", zap.Error(err))
+		}
+		if err := sendPasswordResetEmail(ctx, s.mail, payload); err != nil {
+			s.log.Warn("password reset email send failed", zap.Error(err))
+		}
+	}
 	return nil
 }
 

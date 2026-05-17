@@ -29,6 +29,28 @@ type Config struct {
 	Mail       MailConfig
 	Bootstrap  BootstrapConfig
 	Migrations MigrationsConfig
+	Jobs       JobsConfig
+	Redis      RedisConfig
+	Queue      QueueConfig
+}
+
+type JobsConfig struct {
+	Enabled        bool
+	WorkerPoolSize int
+	QueueSize      int
+	Timezone       string // IANA tz for cron specs, e.g. "UTC" or "Asia/Dhaka"
+}
+
+type RedisConfig struct {
+	Addr     string
+	Password string
+	DB       int
+}
+
+type QueueConfig struct {
+	Enabled     bool           // master switch for the asynq-backed queue
+	Concurrency int            // total workers across all queues on this instance
+	Queues      map[string]int // queue name → priority weight (higher = preferred)
 }
 
 type AppConfig struct {
@@ -260,6 +282,22 @@ func Load() (*Config, error) {
 			Dir:     getString("MIGRATIONS_DIR", "migrations"),
 			AutoRun: getBool("MIGRATIONS_AUTO_RUN", true),
 		},
+		Jobs: JobsConfig{
+			Enabled:        getBool("JOBS_ENABLED", true),
+			WorkerPoolSize: getInt("JOBS_WORKER_POOL_SIZE", 8),
+			QueueSize:      getInt("JOBS_QUEUE_SIZE", 1024),
+			Timezone:       getString("JOBS_TIMEZONE", "UTC"),
+		},
+		Redis: RedisConfig{
+			Addr:     getString("REDIS_ADDR", "localhost:6379"),
+			Password: getString("REDIS_PASSWORD", ""),
+			DB:       getInt("REDIS_DB", 0),
+		},
+		Queue: QueueConfig{
+			Enabled:     getBool("QUEUE_ENABLED", false),
+			Concurrency: getInt("QUEUE_CONCURRENCY", 10),
+			Queues:      parseQueueWeights(getString("QUEUE_PRIORITIES", "critical=6,default=3,low=1")),
+		},
 	}
 
 	if cfg.JWT.Secret == "" {
@@ -313,6 +351,32 @@ func getDuration(key string, def time.Duration) time.Duration {
 		return def
 	}
 	return d
+}
+
+// parseQueueWeights parses "name=weight,name=weight" into a priority map for
+// asynq. Falls back to {"default": 1} if the input is malformed or empty.
+func parseQueueWeights(s string) map[string]int {
+	out := map[string]int{}
+	for _, part := range strings.Split(s, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		eq := strings.IndexByte(part, '=')
+		if eq <= 0 {
+			continue
+		}
+		name := strings.TrimSpace(part[:eq])
+		weight, err := strconv.Atoi(strings.TrimSpace(part[eq+1:]))
+		if err != nil || weight <= 0 {
+			continue
+		}
+		out[name] = weight
+	}
+	if len(out) == 0 {
+		out["default"] = 1
+	}
+	return out
 }
 
 func getCSV(key string, def []string) []string {
