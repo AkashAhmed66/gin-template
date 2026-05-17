@@ -2437,10 +2437,6 @@ const docTemplate = `{
                 "usernameOrEmail"
             ],
             "properties": {
-                "deviceName": {
-                    "type": "string",
-                    "maxLength": 200
-                },
                 "password": {
                     "type": "string"
                 },
@@ -2468,10 +2464,6 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
-                "deviceName": {
-                    "type": "string",
-                    "maxLength": 200
-                },
                 "email": {
                     "type": "string",
                     "maxLength": 255

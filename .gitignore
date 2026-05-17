@@ -9,7 +9,7 @@
 app
 app.exe
 
-#swagger doc
+# Swagger generated — entire docs/ is regenerated locally via `swag init`
 docs/
 
 
@@ -38,10 +38,6 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
-
-# Swagger generated — placeholder docs.go is committed; spec output is not
-docs/swagger.json
-docs/swagger.yaml
 
 # Air hot-reload
 tmp/

@@ -5,17 +5,15 @@ package auth
 import "time"
 
 type RegisterRequest struct {
-	Username   string `json:"username" binding:"required,min=3,max=64"`
-	Email      string `json:"email" binding:"required,email,max=255"`
-	Password   string `json:"password" binding:"required,min=8,max=128"`
-	FullName   string `json:"fullName" binding:"max=200"`
-	DeviceName string `json:"deviceName" binding:"max=200"`
+	Username string `json:"username" binding:"required,min=3,max=64"`
+	Email    string `json:"email" binding:"required,email,max=255"`
+	Password string `json:"password" binding:"required,min=8,max=128"`
+	FullName string `json:"fullName" binding:"max=200"`
 }
 
 type LoginRequest struct {
 	UsernameOrEmail string `json:"usernameOrEmail" binding:"required"`
 	Password        string `json:"password" binding:"required"`
-	DeviceName      string `json:"deviceName" binding:"max=200"`
 }
 
 type RefreshRequest struct {

@@ -56,12 +56,26 @@ cp .env.example .env
 `.env` is gitignored. `.env.example` is committed and documents every supported variable.
 
 ### 3. Install + run
+
+The `docs/` folder is gitignored — it's regenerated locally. On a **fresh clone you MUST generate it before the first `go run`**, otherwise the build fails on the blank import in `main.go`.
+
 ```bash
+# Sync Go dependencies
 go mod tidy
-swag init
+
+# One-time: install the swag CLI (writes to $GOPATH/bin — make sure that's on PATH)
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generate the Swagger spec into docs/ — required before the first run
+swag init --parseDependency --parseInternal
+
+# Run
 go run .
 ```
+
 Boot order: `.env` loads → DB connects → goose applies migrations → bootstrap admin is created if missing → HTTP server listens on `:8080`.
+
+**On subsequent runs** you only need `swag init --parseDependency --parseInternal` again if you've changed `// @...` annotations on a handler. Plain `go run .` is enough otherwise.
 
 ### 4. Try it
 - Health: <http://localhost:8080/health>
@@ -116,21 +130,23 @@ See [Swagger / OpenAPI Annotations](#swagger--openapi-annotations) below for the
 
 Everything you'll do day-to-day. Pick the form that matches your shell (`make` works in Git Bash on Windows or any Unix shell; the bare commands work in PowerShell).
 
-### Setup (once per machine)
+### Setup (fresh clone)
 
 ```powershell
-# Install Go dependencies
+# 1. Sync Go dependencies
 go mod tidy
 
-# Install the swag CLI for regenerating the Swagger spec
+# 2. Install the swag CLI (REQUIRED — docs/ is gitignored)
 make swag-install
 # or: go install github.com/swaggo/swag/cmd/swag@latest
 
-# Install goose for manual migration commands (optional — auto-run on boot)
-go install github.com/pressly/goose/v3/cmd/goose@latest
+# 3. Generate docs/ before the first build, or main.go fails on the blank import
+swag init --parseDependency --parseInternal
+# or: make swag
 
-# Install air for hot reload (optional)
-go install github.com/air-verse/air@latest
+# 4. Optional tooling
+go install github.com/pressly/goose/v3/cmd/goose@latest   # manual migrations
+go install github.com/air-verse/air@latest                # hot reload
 ```
 
 ### Run
@@ -219,7 +235,7 @@ BOOTSTRAP_ADMIN_PASSWORD=strong-pass
 ```
 gin-template/
 ├── main.go                            ← entry point (composition)
-├── docs/                              ← generated Swagger spec (swag init writes here)
+├── docs/                              ← generated Swagger spec — gitignored, recreated by `swag init`
 ├── internal/
 │   ├── config/                        ← typed env loading (godotenv + struct)
 │   ├── logger/                        ← zap setup + context-scoped fields
@@ -585,8 +601,8 @@ If the UI shows **"Failed to load API definition — 500 doc.json"**, you forgot
 | File | Role |
 |---|---|
 | [main.go](main.go) | `@title` / `@version` / `@BasePath` / `@securityDefinitions` block. Blank-imports `docs/`. Carries the `go:generate` directive. |
-| [docs/docs.go](docs/docs.go) | **Generated.** Don't hand-edit — `swag init` overwrites it. The placeholder version is committed so the build works before the first generation. |
-| `docs/swagger.json`, `docs/swagger.yaml` | **Generated.** Both gitignored by default. |
+| `docs/docs.go` | **Generated and gitignored.** `swag init` writes it. Required for the build — must exist before the first `go run .`. |
+| `docs/swagger.json`, `docs/swagger.yaml` | **Generated and gitignored.** Same trigger as `docs.go`. |
 | [internal/router/router.go](internal/router/router.go) | Mounts `gin-swagger` at `/swagger/*any`. |
 | [internal/modules/*/handler.go](internal/modules/) | All endpoint-level annotations. Every existing endpoint already has one — copy the shape when adding new ones. |
 
@@ -597,6 +613,7 @@ If the UI shows **"Failed to load API definition — 500 doc.json"**, you forgot
 | `Failed to load API definition — Internal Server Error doc.json` | Spec hasn't been generated. Run `go generate ./...` then restart. |
 | `unknown field LeftDelim in Spec` build error | swag CLI is newer than the library — `go get github.com/swaggo/swag@latest && go mod tidy`. |
 | `cannot find type definition: foo.Bar` while running `swag init` | The handler file doesn't import that package. Use a local alias or drop the `data=` portion. |
+| `cannot find package "github.com/.../docs"` build error after a fresh clone | `docs/` is gitignored — generate it before the first build: `swag init --parseDependency --parseInternal` (or `make swag`). |
 | `cannot find file: main.go` from `swag init` | You ran swag from a subdirectory. Run it from the project root: `cd c:\projects\go\gin-template; swag init --parseDependency --parseInternal`. |
 | Empty `paths: {}` in the generated spec | swag couldn't find your handlers. Make sure you're running from the project root and pass `--parseDependency --parseInternal`. |
 | New endpoint missing from the UI | Forgot to re-run `swag init` after adding annotations, or your `@Router` path doesn't match what's actually registered. |
@@ -700,6 +717,9 @@ goose -dir migrations postgres "postgres://user:pass@localhost/db?sslmode=disabl
 ```bash
 # Sync deps
 go mod tidy
+
+# Generate Swagger docs/ (gitignored — REQUIRED before the first build/run)
+swag init --parseDependency --parseInternal
 
 # Run
 go run .

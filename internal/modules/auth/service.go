@@ -107,7 +107,7 @@ func (s *service) Register(ctx context.Context, req RegisterRequest, ua, ip stri
 	}
 
 	go s.sendWelcome(*full)
-	return s.issueTokens(ctx, *full, 0, req.DeviceName, ua, ip)
+	return s.issueTokens(ctx, *full, 0, deviceNameFromUserAgent(ua), ua, ip)
 }
 
 func (s *service) Login(ctx context.Context, req LoginRequest, ua, ip string) (*AuthResponse, error) {
@@ -121,7 +121,7 @@ func (s *service) Login(ctx context.Context, req LoginRequest, ua, ip string) (*
 	if !u.Enabled {
 		return nil, errs.Unauthorized("Account is deactivated")
 	}
-	return s.issueTokens(ctx, *u, 0, req.DeviceName, ua, ip)
+	return s.issueTokens(ctx, *u, 0, deviceNameFromUserAgent(ua), ua, ip)
 }
 
 func (s *service) Refresh(ctx context.Context, refreshToken, ua, ip string) (*AuthResponse, error) {
