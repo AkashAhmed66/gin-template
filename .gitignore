@@ -41,3 +41,7 @@ Thumbs.db
 
 # Air hot-reload
 tmp/
+
+# Deployment
+release.tar.gz
+
