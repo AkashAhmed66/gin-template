@@ -22,7 +22,8 @@ This is the Gin port of [spring-boot-template](../spring-boot-template) — same
 8. [Built-in Endpoints](#built-in-endpoints)
 9. [Database Migrations](#database-migrations)
 10. [Docker](#docker)
-11. [Build, Test, Run](#build-test-run)
+11. [Deployment (Nginx + TLS)](#deployment-nginx--tls)
+12. [Build, Test, Run](#build-test-run)
 
 ---
 
@@ -1097,6 +1098,164 @@ docker run --rm -p 8080:8080 \
 ```
 
 (`host.docker.internal` reaches services running on your host from inside the container — works on Docker Desktop. On Linux pass `--add-host=host.docker.internal:host-gateway`.)
+
+---
+
+## Deployment (Nginx + TLS)
+
+You can ship this app two ways. Pick one — the Nginx setup is identical.
+
+| | **A. Binary + systemd** | **B. Docker Compose** |
+|---|---|---|
+| Best when | Light VPS, no Docker runtime, classic ops | Docker already on the box; want the whole stack with one command |
+| Artifact | ~25 MB static Linux binary | `docker compose up` |
+| Updates | Rebuild → scp → `systemctl restart` | `docker compose up -d --build app` |
+
+Both use the same configs in [deploy/](deploy/): a systemd unit and an Nginx vhost.
+
+### Option A — Binary + systemd
+
+**1. Cross-compile on your dev box** (PowerShell example):
+
+```powershell
+$env:GOOS="linux"; $env:GOARCH="amd64"; $env:CGO_ENABLED="0"
+swag init --parseDependency --parseInternal
+go build -trimpath -ldflags="-s -w" -o bin/gin-template .
+Remove-Item Env:GOOS, Env:GOARCH, Env:CGO_ENABLED
+
+tar -czf release.tar.gz bin/gin-template migrations/ templates/ docs/ deploy/
+scp release.tar.gz user@server:/tmp/
+```
+
+**2. One-time server prep** (Ubuntu / Debian):
+
+```bash
+sudo apt update && sudo apt install -y postgresql redis-server nginx
+sudo useradd --system --create-home --shell /usr/sbin/nologin gin-app
+sudo mkdir -p /opt/gin-template/{bin,migrations,templates,docs,uploads,logs,deploy}
+sudo chown -R gin-app:gin-app /opt/gin-template
+
+# Create the database
+sudo -u postgres psql -c "CREATE DATABASE gin_template;"
+sudo -u postgres psql -c "CREATE USER gin_app WITH PASSWORD 'strong-password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE gin_template TO gin_app;"
+```
+
+**3. Extract, write env, start:**
+
+```bash
+sudo tar -xzf /tmp/release.tar.gz -C /opt/gin-template/
+sudo chown -R gin-app:gin-app /opt/gin-template
+
+# Production .env — DO NOT commit; chmod 600
+sudo -u gin-app tee /opt/gin-template/.env > /dev/null <<'EOF'
+APP_ENV=prod
+SERVER_PORT=8080
+DB_DRIVER=postgres
+DB_HOST=127.0.0.1
+DB_USER=gin_app
+DB_PASSWORD=strong-password
+DB_NAME=gin_template
+JWT_SECRET=<paste output of `openssl rand -base64 32`>
+LOG_FORMAT=json
+LOG_DIR=/opt/gin-template/logs
+STORAGE_BASE_PATH=/opt/gin-template/uploads
+REDIS_ADDR=127.0.0.1:6379
+QUEUE_ENABLED=true
+EOF
+sudo chmod 600 /opt/gin-template/.env
+
+# Install + start the systemd unit
+sudo cp /opt/gin-template/deploy/gin-template.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now gin-template
+sudo systemctl status gin-template
+```
+
+The unit ([deploy/gin-template.service](deploy/gin-template.service)) runs the app as the `gin-app` user with hardening flags (no new privileges, read-only filesystem outside `uploads/` + `logs/`, etc.).
+
+### Option B — Docker Compose
+
+The bundled [docker-compose.yml](docker-compose.yml) boots the entire stack (app + Postgres + Redis + Asynqmon). On the server:
+
+```bash
+git clone https://github.com/AkashAhmed66/gin-template.git /opt/gin-template
+cd /opt/gin-template
+
+# Production overrides — keep out of git
+cat > .env.prod <<'EOF'
+JWT_SECRET=<paste output of `openssl rand -base64 32`>
+DB_PASSWORD=<strong-password>
+APP_ENV=prod
+EOF
+
+docker compose --env-file .env.prod up -d --build
+```
+
+For prod, edit [docker-compose.yml](docker-compose.yml) to:
+- Set `APP_ENV: prod`
+- **Remove the `ports:` lines** for Postgres, Redis, and Asynqmon (don't expose them publicly — only `app` needs `8080` published)
+- Point at managed Postgres / Redis if this is more than a hobby box
+
+### Nginx reverse proxy (both options)
+
+Either option leaves the app listening on `127.0.0.1:8080`. Nginx terminates TLS and forwards:
+
+```bash
+sudo cp /opt/gin-template/deploy/nginx.conf /etc/nginx/sites-available/gin-template
+# Edit the file: replace api.yourdomain.com with your real hostname
+sudo ln -s /etc/nginx/sites-available/gin-template /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+The vhost ([deploy/nginx.conf](deploy/nginx.conf)) ships with:
+- HTTP → HTTPS redirect
+- TLS settings ready for Let's Encrypt to fill in
+- `client_max_body_size 16M` (matches `STORAGE_MAX_UPLOAD_SIZE`)
+- Security headers (HSTS, X-Frame-Options, etc.)
+- gzip for JSON / JS / CSS
+- Forwards `X-Real-IP` so audit logs record the client IP, not nginx's
+
+### TLS with Let's Encrypt
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d api.yourdomain.com
+# certbot edits the vhost in place and sets up auto-renewal
+```
+
+`https://api.yourdomain.com` is live. Auto-renewal runs from a systemd timer — no action needed.
+
+### Sanity checks after first deploy
+
+```bash
+curl https://api.yourdomain.com/health                                  # → 200 {"status":"ok"}
+curl https://api.yourdomain.com/api/v1/auth/login -d '...'              # → 200 with tokens
+sudo journalctl -u gin-template -f                                      # watch app logs
+sudo tail -f /var/log/nginx/gin-template.access.log                     # watch nginx
+```
+
+Audit log entries should show your real client IP — if they show `127.0.0.1`, nginx isn't forwarding `X-Real-IP` correctly.
+
+### Updates
+
+| Option | Update command |
+|---|---|
+| Binary | `sudo systemctl stop gin-template && sudo tar -xzf /tmp/release.tar.gz -C /opt/gin-template/ && sudo systemctl start gin-template` |
+| Docker | `docker compose --env-file .env.prod up -d --build app` |
+
+### Production checklist
+
+- [ ] `JWT_SECRET` overridden (32+ random bytes; never the compose default)
+- [ ] `APP_ENV=prod`
+- [ ] Postgres + Redis on private network, **not** exposed publicly
+- [ ] Asynqmon (port 8081) bound to localhost only; tunnel over SSH when you need it
+- [ ] Real persistent storage mounted for `/app/uploads`
+- [ ] `MAIL_*` configured if password-reset email is used
+- [ ] TLS active, HSTS header serving
+- [ ] Pool sizes tuned for the workload (`DB_POOL_MAX_OPEN`, `QUEUE_CONCURRENCY`)
+- [ ] Off-host backups for Postgres set up
 
 ---
 

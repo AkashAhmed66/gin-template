@@ -1,0 +1,39 @@
+[Unit]
+Description=Gin Template API
+Documentation=https://github.com/AkashAhmed66/gin-template
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=gin-app
+Group=gin-app
+WorkingDirectory=/opt/gin-template
+EnvironmentFile=/opt/gin-template/.env
+ExecStart=/opt/gin-template/bin/gin-template
+Restart=on-failure
+RestartSec=5s
+
+# Graceful shutdown — give the app time to drain (matches SERVER_SHUTDOWN_TIMEOUT)
+TimeoutStopSec=45s
+KillSignal=SIGTERM
+
+# Logging — stdout goes to journald; the file sink still writes to /opt/gin-template/logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gin-template
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/gin-template/uploads /opt/gin-template/logs
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
